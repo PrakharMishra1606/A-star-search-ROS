@@ -115,6 +115,9 @@ class problem():
         return node(state, location, parent_node, action, path_cost)
 
     def heuristic_value(self, n):
+        '''
+        Returns h(n) for node n
+        '''
         dist = DistanceMetric.get_metric(self.heuristic)
         a = n.coordinates
         b = self.goal_node.coordinates
@@ -132,15 +135,15 @@ class problem():
     # should return sequence of actions of sequence of nodes?
     def solution(self, node):
         '''
-        returns list of nodes odered source to goal node
+        returns list of nodes odered source to goal node (bactracks)
         '''  
-        solution = [node]
+        path = [node]
         while(node.parent is not None):
-            solution.append(node.parent)
+            path.append(node.parent)
             node = node.parent
 
-        solution.reverse()
-        return solution
+        path.reverse()
+        return path
 
 
 class priority_queue():
@@ -149,11 +152,10 @@ class priority_queue():
         heapq.heapify(self.list)
     
     def isEmpty(self):
+        '''
+        Returns True if frontier is empty
+        '''
         return not self.list
-
-    # is this being called?
-    def length(self):
-        return len(self.list)
 
     def doesNotContain(self, state):
         '''
@@ -168,7 +170,7 @@ class priority_queue():
 
     def f_cost(self, n):
         '''
-        Returns the f_cost of the node n
+        Returns the f_cost of the node n. f_cost is the estimated total cost of the path through node n to goal 
         '''
 
         for data in self.list:
@@ -179,7 +181,7 @@ class priority_queue():
 
     def replace(self, n, child_cost):
         '''
-        Replaces n in frontier
+        Replaces node n in frontier with a lower f_cost
         '''
         for i, data in enumerate(self.list):
             _, s, _ = data
@@ -190,9 +192,15 @@ class priority_queue():
 
 
     def pop(self):
+        '''
+        pop and return node with lowest cost
+        '''
         return heapq.heappop(self.list)
 
     def insert(self, f_cost, state, node):
+        '''
+        Insert node with state and f_cost into frontier
+        '''
         heapq.heappush(self.list, (f_cost, node.state, node) )
 
 
@@ -204,7 +212,7 @@ def A_star_search(prob):
     explored = set()
     
     while(True):
-        # EMPTY?(FRONTIER)
+        # If frontier is empty, then no path exists
         if frontier.isEmpty():
             return [] #failure
         
@@ -215,17 +223,17 @@ def A_star_search(prob):
         if prob.goal_test(node.state):
             return prob.solution(node)
 
+        # Explore a node's children. Mark node as explored
         explored.add(node.state)
 
         for action in prob.actions(node.state):
             child = prob.child_node(node, action)
             
             if( (child.state not in explored) and frontier.doesNotContain(child.state) ):
-                #print(f" frontier doesnotcontain? {child.state}  - {frontier.doesNotContain(child.state)}")
                 frontier.insert(prob.f(child), child.state, child)
 
             
-            # remaining
+            # replace child node if it exists in frontier with higher cost
             elif frontier.doesNotContain(child.state) == False:
                 # retrieve child f cost
                 x = frontier.f_cost(child)
